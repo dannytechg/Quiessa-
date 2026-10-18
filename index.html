@@ -61,7 +61,7 @@ select{flex:0 0 78px;border:1px solid var(--line);padding:9px 6px;font:inherit;f
 .split h3{font-size:30px;font-weight:300}
 footer{padding:48px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:28px;font-size:14px;border-top:1px solid var(--line)}
 footer h5{font-size:14px;margin-bottom:10px}
-footer li{list-style:none;color:var(--mute);margin:6px 0}
+footer li{list-style:none;color:var(--mute);margin:6px 0}footer li a:hover{color:var(--ink);text-decoration:underline}
 footer ul{padding:0}
 .news form{display:flex;margin-top:8px}
 .news input{flex:1;min-width:0;border:1px solid var(--ink);padding:10px;font:inherit}
@@ -94,7 +94,7 @@ aside header{position:static;height:60px}
   <nav aria-label="Main">
     <a href="#new">Women</a><a href="#men">Men</a><a href="#cats">Accessories</a><a href="#cats">Shoes</a><a href="#new">Sale</a>
   </nav>
-  <div class="tools"><a href="#">Account</a>
+  <div class="tools"><a href="https://wa.me/2349134385096" target="_blank" rel="noopener">Contact</a>
     <button class="cartbtn" id="open" aria-label="Open cart">Cart <span class="count" id="count">0</span></button>
   </div>
 </header>
@@ -146,11 +146,11 @@ aside header{position:static;height:60px}
 
 <footer>
   <div><h5>Shop</h5><ul><li>Women</li><li>Men</li><li>Accessories</li><li>Gift cards</li></ul></div>
-  <div><h5>Help</h5><ul><li>Shipping</li><li>Returns</li><li>Size guide</li><li>Contact us</li></ul></div>
-  <div><h5>Company</h5><ul><li>About</li><li>Careers</li><li>Stockists</li></ul></div>
-  <div class="news"><h5>Get early access</h5><p style="color:var(--mute)">New drops and offers, straight to your inbox.</p>
+  <div><h5>Help</h5><ul><li>Shipping</li><li>Returns</li><li>Size guide</li><li><a href="https://wa.me/2349134385096" target="_blank" rel="noopener">WhatsApp: 0913 438 5096</a></li><li><a href="mailto:dannnnytech@gmail.com">dannnnytech@gmail.com</a></li></ul></div>
+  <div><h5>Company</h5><ul><li>About</li><li>Privacy policy</li><li>Terms of service</li></ul></div>
+  <div class="news"><h5>Join our list</h5><p style="color:var(--mute)">New drops and offers, straight to your inbox.</p>
     <form id="nf"><input type="email" required placeholder="Email address" aria-label="Email address"><button>Join</button></form></div>
-  <p class="fine">&copy; 2026 Quiessa. Demo storefront: replace the sample products, prices and checkout with your own.</p>
+  <p class="fine">&copy; 2026 Quiessa. All rights reserved.</p>
 </footer>
 
 <div class="veil" id="veil"></div>
@@ -160,7 +160,7 @@ aside header{position:static;height:60px}
   <div class="foot">
     <div class="tot"><span>Subtotal</span><strong id="sub">₦0</strong></div>
     <p style="color:var(--mute);font-size:12px;margin-bottom:12px">Shipping and returns are complimentary.</p>
-    <button class="btn dark" style="width:100%" id="checkout">Checkout</button>
+    <button class="btn dark" style="width:100%" id="checkout">Order on WhatsApp</button>
   </div>
 </aside>
 <div class="toast" id="toast" role="status"></div>
@@ -215,8 +215,16 @@ document.addEventListener("click",e=>{
 });
 $("#open").onclick=()=>toggle(true);$("#close").onclick=$("#veil").onclick=()=>toggle(false);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")toggle(false)});
-$("#checkout").onclick=()=>toast(cart.length?"Connect your payment provider to enable checkout":"Your cart is empty");
-$("#nf").onsubmit=e=>{e.preventDefault();e.target.reset();toast("Thanks, you're on the list")};
+$("#checkout").onclick=()=>{
+  if(!cart.length){toast("Your cart is empty");return}
+  const lines=cart.map(l=>`- ${l.n} (${l.color}, ${l.size}) x${l.q} = ${fmt(l.p*l.q)}`).join("\n");
+  const total=fmt(cart.reduce((a,l)=>a+l.q*l.p,0));
+  const msg=`Hello Quiessa, I would like to order:\n${lines}\nTotal: ${total}\n\nName:\nDelivery address:`;
+  window.open("https://wa.me/2349134385096?text="+encodeURIComponent(msg),"_blank");
+};
+$("#nf").onsubmit=e=>{e.preventDefault();const m=e.target.querySelector("input").value;
+  location.href="mailto:dannnnytech@gmail.com?subject="+encodeURIComponent("Add me to the Quiessa list")+"&body="+encodeURIComponent("Please add this email to your list: "+m);
+  e.target.reset()};
 render();drawCart();
 </script>
 </body>
