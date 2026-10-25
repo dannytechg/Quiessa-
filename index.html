@@ -15,6 +15,7 @@ a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .bar{background:var(--ink);color:#fff;text-align:center;font-size:12px;letter-spacing:.08em;padding:9px 12px}
+.sbtn{display:flex;gap:6px;align-items:center;font-size:14px}.sbtn svg{width:18px;height:18px;flex:none}@media(max-width:760px){.sbtn span{display:none}}.sbar{position:absolute;left:0;right:0;top:100%;background:var(--paper);border-bottom:1px solid var(--line);padding:12px 24px;display:none;gap:14px;align-items:center;z-index:19}.sbar.on{display:flex}.sbar input{flex:1;min-width:0;border:1px solid var(--line);padding:12px 14px;font:inherit;background:var(--paper);color:var(--ink);border-radius:0}.sbar button{font-size:13px;text-decoration:underline;color:var(--mute)}.row{scroll-margin-top:140px}
 header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:64px;gap:16px}
 .logo{font-size:26px;font-weight:300;letter-spacing:.2em}
 nav{display:flex;gap:28px;font-size:14px}
@@ -95,8 +96,10 @@ aside header{position:static;height:60px}
     <a href="#new">Women</a><a href="#men">Men</a><a href="#cats">Accessories</a><a href="#cats">Shoes</a><a href="#new">Sale</a>
   </nav>
   <div class="tools"><a href="https://wa.me/2349134385096" target="_blank" rel="noopener">Contact</a>
+    <button class="sbtn" id="sbtn" aria-label="Search" aria-expanded="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Search</span></button>
     <button class="cartbtn" id="open" aria-label="Open cart">Cart <span class="count" id="count">0</span></button>
   </div>
+  <div class="sbar" id="sbar"><input id="sin" type="search" placeholder="Search products" aria-label="Search products" autocomplete="off"><button id="sclr" type="button">Clear</button></div>
 </header>
 
 <main id="top">
@@ -178,11 +181,16 @@ const P=[
 ];
 const $=s=>document.querySelector(s),fmt=n=>"₦"+n.toLocaleString("en-NG");
 const sel={};let cart=[],filter="all";
+/* search */
+let q="";
+const esc=t=>t.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const hit=(p,hay)=>!q||q.split(/\s+/).every(t=>hay.includes(t));
+
 P.forEach(p=>sel[p.id]=0);
 
 function render(){
-  const list=P.filter(p=>filter==="all"||p.c===filter);
-  $("#shown").textContent=list.length+" items";
+  const list=q?P.filter(p=>hit(p,(p.n+" "+p.c+" "+p.cl.map(c=>c[0]).join(" ")).toLowerCase())):P.filter(p=>filter==="all"||p.c===filter);
+  $("#shown").textContent=q?list.length+" results for “"+esc(q)+"”":list.length+" items";
   $("#grid").innerHTML=list.map(p=>`<article class="card">
     <div class="img" style="--bg:${p.cl[sel[p.id]][1]}">${p.t?`<span class="tag" style="color:#111;letter-spacing:0">${p.t}</span>`:""}<span>Quiessa</span><div class="ph" role="img" aria-label="${p.n}" style="--ph:var(--i-p${p.id})"></div></div>
     <h3>${p.n}</h3>
@@ -190,6 +198,7 @@ function render(){
     <div class="sw" role="group" aria-label="Colour">${p.cl.map((c,i)=>`<button style="--c:${c[1]}" data-sw="${p.id}:${i}" aria-label="${c[0]}" aria-pressed="${sel[p.id]===i}"></button>`).join("")}</div>
     <div class="buy"><select id="sz${p.id}" aria-label="Size"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option></select>
     <button class="add" data-add="${p.id}">Add to cart</button></div></article>`).join("");
+  if(!list.length)$("#grid").innerHTML=`<p style="grid-column:1/-1;color:var(--mute);padding:30px 0">No items match “${esc(q)}”. Try another word.</p>`;
 }
 function drawCart(){
   const n=cart.reduce((a,l)=>a+l.q,0),t=cart.reduce((a,l)=>a+l.q*l.p,0);
@@ -204,7 +213,7 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clea
 
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,a");if(!b)return;const d=b.dataset;
-  if(d.f){filter=d.f;document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c===b));render();$("#new").scrollIntoView()}
+  if(d.f){q="";$("#sin").value="";filter=d.f;document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("on",c===b));render();$("#new").scrollIntoView()}
   if(d.sw){const[i,k]=d.sw.split(":").map(Number);sel[i]=k;render()}
   if(d.add){const p=P.find(x=>x.id==d.add),c=p.cl[sel[p.id]],size=$("#sz"+p.id).value;
     const f=cart.find(l=>l.id===p.id&&l.color===c[0]&&l.size===size);
@@ -215,6 +224,12 @@ document.addEventListener("click",e=>{
 });
 $("#open").onclick=()=>toggle(true);$("#close").onclick=$("#veil").onclick=()=>toggle(false);
 document.addEventListener("keydown",e=>{if(e.key==="Escape")toggle(false)});
+$("#sbtn").onclick=()=>{const on=!$("#sbar").classList.contains("on");$("#sbar").classList.toggle("on",on);$("#sbtn").setAttribute("aria-expanded",on);if(on)$("#sin").focus();else setQ("")};
+function setQ(v){q=v.trim().toLowerCase();$("#sin").value=v;render();if(q)$("#shown").closest(".row").scrollIntoView({behavior:"smooth"})}
+$("#sin").addEventListener("input",e=>setQ(e.target.value));
+$("#sclr").onclick=()=>{setQ("");$("#sin").focus()};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&$("#sbar").classList.contains("on")){$("#sbar").classList.remove("on");$("#sbtn").setAttribute("aria-expanded","false");setQ("")}});
+
 $("#checkout").onclick=()=>{
   if(!cart.length){toast("Your cart is empty");return}
   const lines=cart.map(l=>`- ${l.n} (${l.color}, ${l.size}) x${l.q} = ${fmt(l.p*l.q)}`).join("\n");
